@@ -1,2 +1,2 @@
-# COMP130004.02-DS-A
-Lab and project of the course
+# COMP130004.02-Data Structure FDU 2023Fall
+This repository contains labs and projects for the course.
