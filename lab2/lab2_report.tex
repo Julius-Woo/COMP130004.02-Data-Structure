@@ -241,6 +241,7 @@ def matrix_multiply_strassen_t(A, B, t):
 \medskip
 \begin{table}[h]
     \centering
+    \caption{Running time of different matrix multiplication algorithms.}
     \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
     \hline
     Matrix Dimension & $2^2$ & $2^3$ & $2^4$ & $2^5$ & $2^6$ & $2^7$ & $2^8$ & $2^9$ & $2^{10}$ \\
@@ -254,7 +255,7 @@ def matrix_multiply_strassen_t(A, B, t):
     Strassen64 Multiplication (ms) & 0.0 & 0.0 & 1.0 & 3.0 & 23.9 & 163.6 & 1247.9 & 9895.1 & 123558.6 \\
     \hline
     \end{tabular}
-    \caption{Running time of different matrix multiplication algorithms.}
+
 \end{table}  
 \begin{figure}[H]
     \centering
@@ -269,13 +270,27 @@ def matrix_multiply_strassen_t(A, B, t):
 \end{figure}
 After improvement, the advantage of Strassen's algorithm is obvious when the matrix size is large, and the computation time is greatly reduced than the ordinary algorithm. This is consistent with the theoretical time complexity analysis.\\
 Apart from that, we can see that $t = 32$ is good with the lowest cost among three thresholds. To further verify that the orders of magnitude of the two algorithms are correct, we take the cube root of the running time of the ordinary algorithm,
-take $log7$ root of the running time of Strassen's algorithm, and plot the rooted time vs matrix size in Figure 3.\\
+take $log7$ root of the running time of Strassen's algorithm, and draw a scatter plot. We use $\it{scikit-learn}$ package in Python to calculate both the linear regression models and compute their correlation coefficients to varify the linear relation.
+The closer the absolute value of coefficient is to 1, the stronger the linear correlation is. Finally, we plot the regression lines. See code in timeana.py which is omitted here and results are shown in Table 2 and Figure 3 below.\\
+\begin{table}[h!]
+    \centering
+    \caption{Regression and Correlation Results}
+    \begin{tabular}{lcc}
+    \hline
+    & \textbf{Ordinary Method} & \textbf{Strassen32 Method} \\
+    \hline
+    Regression Equation & $y = 0.0050x - 0.0426$ & $y = 0.0045x - 0.0399$ \\
+    Correlation Coefficient & 0.9995 & 0.9993 \\
+    \hline
+    \end{tabular}
+\end{table}
+\medskip
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{complexity_analysis.png}
     \caption{Rooted time cost of the ordinary algorithm and Strassen's algorithm with threshold}
 \end{figure}
-From the figure, we can see that the rooted time cost of the algorithm is approximately a linear function of the matrix size, which is consistent with the theoretical time complexity analysis.\\
+From the table and the figure, we can see that the rooted time cost of the algorithm is much closed to a linear function of the matrix size, which is consistent with the theoretical time complexity analysis.\\
 \textbf{Conclusion}:\\
 The theoretical time complexity of the ordinary algorithm is $O(n^3)$, and the theoretical time complexity of Strassen's algorithm is $O(n^{log7})$. When the matrix size is large enough, Strassen's algorithm with thresholds is much faster than the ordinary algorithm.
 However, when the matrix size is small, the ordinary algorithm is still useful.\\

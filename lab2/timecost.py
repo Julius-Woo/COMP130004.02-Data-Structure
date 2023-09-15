@@ -60,14 +60,3 @@ plt.title('Matrix Multiplication Algorithms Comparison')
 plt.legend()
 plt.grid(True)
 plt.show()
-
-# time_ord_root = [t ** (1/3) for t in time_ord]
-# time_strassen_root = [t ** (1/2.81) for t in time_strassen]  # 2.81 is the exponent of n in Strassen's algorithm
-# plt.figure(figsize=(10, 6))
-# plt.plot(nrange, time_ord_root, label='Ordinary Multiplication')
-# plt.xlabel(' Matrix Size (N)')
-# plt.ylabel('Cube Root of Time')
-# plt.title('Ordinary Matrix Multiplication')
-# plt.legend()
-# plt.grid(True)
-# plt.show()
