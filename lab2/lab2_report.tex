@@ -11,6 +11,7 @@
 \geometry{a4paper,scale=0.8}
 \usepackage{caption}
 \captionsetup[figure]{name={Figure}}
+\captionsetup[table]{name={Table}}
 
 \lstset{
 language=Python, % 设置语言
@@ -30,7 +31,7 @@ frame=single, % 边框
 framesep=1em % 设置代码与边框的距离
 }
 
-\title{\textbf{Data Structure lab1}}
+\title{\textbf{Data Structure lab2}}
 \author{吴嘉骜 21307130203}
 \date{\today}
 
@@ -39,249 +40,243 @@ framesep=1em % 设置代码与边框的距离
 \maketitle
 
 \noindent
-\textbf {Objective}\\  The objective of this lab is to understand insertion sort, merge sort and their respective complexity. \\
+\textbf {Objective}\\  The objective of this lab is to implement Strassen’s algorithm and ordinary algorithm for matrix multiplication and undertake a
+comprehensive analysis of both algorithms. \\
 \noindent
 \textbf {Experiment environment} \\
     Windows 11 VsCode Python 3.10.7 64-bit
 
-\section{}
+\section{Coding}
 \setlength{\parindent}{0pt}
-Write code for insertion sort. \\
-
-\textbf{Solution}: See insertionSort.py.
+Write code for Strassen's and ordinary algorithms.
+\subsection{Ordinary algorithm}
+\textbf{Solution}: See matrix\_mul\_ord.py.
 \begin{lstlisting}
-def insertionSort(array):
-    n = len(array)
-    for j in range(1,n):
-        key = array[j] # key is the value we are trying to insert
-        i = j - 1 # i is the index of the value to the left of key
-        while i >= 0 and key < array[i]: # while i is not out of bounds and key is less than the value to the left of it
-            array[i+1] = array[i] # move the value to the left of key one index to right
-            i = i - 1
-        array[i+1] = key # insert key into the correct position
-    return array
+# squre matrix multiplication using ordinary algorithm
+def matrix_multiply_ordinary(A, B):
+n = len(A)
+C = [[0 for _ in range(n)] for _ in range(n)]
+for i in range(n):
+    for j in range(n):
+        for k in range(n):
+            C[i][j] += A[i][k] * B[k][j]
+return C
 \end{lstlisting}
-\textbf{Code interpretation:} \\
-The code defines a function $\it{insertionSort}$ which takes an array as input and returns the sorted array. 
-The function iterates through the array from index $1$ to $n-1$, and for each index $j$, it stores the value at index $j$ in a variable $\it{key}$. 
-Then it iterates through the array from index $j-1$ to $0$, and for each index $i$, it compares the value at index $i$ with $\it{key}$. 
-If the value at index i is greater than $\it{key}$, it moves the value at index $i$ one index to the right. 
-After the while loop, it inserts $\it{key}$ into the correct position. \\
-\textbf{Result analysis:} \\
-The code is tested with the following array: $[5, 2, 4, 6, 1, 3, 99, 10, 34, 2, 13]$. As shown in Figure 1, the code returns the sorted array $[1, 2, 2, 3, 4, 5, 6, 10, 13, 34, 99]$ successfully.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{insertionSort.png}
-    \caption{Output of insertionSort}
-\end{figure}
 
 
-\section{}
-Write code for merge sort.\\
-
-\textbf{Solution}: See mergeSort.py.
+\subsection{Strassen's algorithm}
+\textbf{Solution}: See matrix\_mul\_Strassen.py.
 \begin{lstlisting}
-def merge(left, right): # merge two sorted arrays
+# squre matrix multiplication using Strassen algorithm, 2^k * 2^k
+def matrix_multiply_strassen(A, B):
+    n = len(A)  # matrix dimension
+    if n == 1:  # base case
+        return [[A[0][0] * B[0][0]]]
+    
+    # divide matrix A and B into four sub-matrices
+    mid = n // 2
+    A11 = [row[:mid] for row in A[:mid]]
+    A12 = [row[mid:] for row in A[:mid]]
+    A21 = [row[:mid] for row in A[mid:]]
+    A22 = [row[mid:] for row in A[mid:]]
+    
+    B11 = [row[:mid] for row in B[:mid]]
+    B12 = [row[mid:] for row in B[:mid]]
+    B21 = [row[:mid] for row in B[mid:]]
+    B22 = [row[mid:] for row in B[mid:]]
+    
+    # calculate the 7 products of the sub-matrices
+    P1 = matrix_multiply_strassen(A11, matrix_add_sub(B12, B22,2))
+    P2 = matrix_multiply_strassen(matrix_add_sub(A11, A12,1), B22)
+    P3 = matrix_multiply_strassen(matrix_add_sub(A21, A22,1), B11)
+    P4 = matrix_multiply_strassen(A22, matrix_add_sub(B21, B11,2))
+    P5 = matrix_multiply_strassen(matrix_add_sub(A11, A22,1), matrix_add_sub(B11, B22,1))
+    P6 = matrix_multiply_strassen(matrix_add_sub(A12, A22,2), matrix_add_sub(B21, B22,1))
+    P7 = matrix_multiply_strassen(matrix_add_sub(A11, A21,2), matrix_add_sub(B11, B12,1))
+    
+    # calculate the four sub-matrices of the result matrix C
+    C11 = matrix_add_sub(matrix_add_sub(matrix_add_sub(P5, P4,1), P2,2), P6,1)
+    C12 = matrix_add_sub(P1, P2,1)
+    C21 = matrix_add_sub(P3, P4,1)
+    C22 = matrix_add_sub(matrix_add_sub(P5, P1,1), matrix_add_sub(P3, P7,1),2)
+    
+    # merge the four sub-matrices into one
     result = []
-    i = 0
-    j = 0
-    leftlen = len(left)
-    rightlen = len(right)
-    while i < leftlen and j < rightlen:
-        if left[i] < right[j]:
-            result.append(left[i]) # append the smaller value
-            i += 1
+    for i in range(n):
+        if i < mid:
+            result.append(C11[i] + C12[i])  # merge C11 and C12
         else:
-            result.append(right[j])
-            j +=1
-    result += left[i:] # append the rest of the values
-    result += right[j:] # append the rest of the values
+            result.append(C21[i - mid] + C22[i - mid])  # merge C21 and C22
+    
     return result
 
-def mergeSort(array):
-    n = len(array)
-    if n == 1:
-        return array
-    else:
-        mid = int(n/2) # split the array in half
-        left = array[:mid] # left half
-        right = array[mid:] # right half
-        left = mergeSort(left) # recursively sort the left half
-        right = mergeSort(right) # recursively sort the right half
-        return merge(left, right) # merge the two sorted halves
+def matrix_add_sub(A, B, flag):
+    if flag == 1:
+        return [[A[i][j] + B[i][j] for j in range(len(A[0]))] for i in range(len(A))]
+
+    if flag == 2:
+        return [[A[i][j] - B[i][j] for j in range(len(A[0]))] for i in range(len(A))]
 \end{lstlisting}
-\textbf{Code interpretation:} \\
-The code defines a function $\it{mergeSort}$ which takes an array as input and returns the sorted array. 
-If the length of the array is $1$, it returns the array. Otherwise, it splits the array in half and recursively calls $\it{mergeSort}$ on the two halves. 
-Then it calls $\it{merge}$ to merge the two sorted halves. The merge function compares the first element of the two arrays and appends the smaller one to the result array, and then it increments the index of the array from which the smaller value is appended.
-After one of the arrays is empty, it appends the rest of the values in the other array to the result array. \\
-\textbf{Result analysis:} \\
-The code is tested with the following array: $[5, 2, 4, 6, 1, 3, 99, 10, 34, 2, 13]$. As shown in Figure 2, the code returns the sorted array $[1, 2, 2, 3, 4, 5, 6, 10, 13, 34, 99]$ successfully.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{mergeSort.png}
-    \caption{Output of mergeSort}
-\end{figure}
 
 
-\section{}
-The running time of merge sort can be improved in practice by taking advantage of the fast 
-running time of insertion sort when its input is "nearly" sorted. When merge sort is called on a 
-subarray with fewer than $k$ elements, use insertion sort to sort the subarray. Argue that this sorting 
-algorithm runs in $O(f(n, k))$ expected time. What is $f(n, k)$ and how should k be picked, both in 
-theory and in practice by experiments?\\
+\section{Analysis}
+Analyze the theoretical time complexity of two algorithms, evaluate the experimental time overhead associated with the algorithm implementation, and
+determine their consistency with theoretical computational complexity.\\
+\textbf{Solution}:
+\subsection{Theoretical time complexity}
+\subsubsection*{Ordinary algorithm}
+The ordinary algorithm is a triple loop, and the innermost loop is a constant time operation, so the time complexity is $O(n^3)$.
+\subsubsection*{Strassen's algorithm}
+Strassen's algorithm is a recursive algorithm. For every step of recursion, we divide the matrix into $4$ sub-matrices with half size, 
+and then calculate the product of the sub-matrices $7$ times. Besides, to do matrix addition or subtraction, we need to traverse the matrix, which takes $\Theta(n^2)$ time. 
+The division and combination work takes trivial time.
+Therefore, the time complexity of the algorithm is $T(n) = 7T(\frac{n}{2}) + \Theta(n^2)$, which is $O(n^{log7})$ according to the master theorem.\\
+Now we use the substitution method to prove the correctness of the time complexity.\\
+\textbf{Proof}:\\
+Assume that $T(k) \leq c_1k^{log7} - c_2k^2$ for all $n_0 \leq k < n$ for some constants $c1, c2 > 0$ and $n_0$. Then consider $n \geq 2n_0$, so that $\frac{n}{2} \geq n_0$ and we can use inductive hypothesis: \\
+\begin{align*}
+    T(n) &= 7T(\frac{n}{2}) + \Theta(n^2) \\
+    &\leq 7(c_1(\frac{n}{2})^{log7} - c_2(\frac{n}{2})^2) + \Theta(n^2) \\
+    &= c_1n^{log7} - c_2n^2 - \frac{3}{4}c_2n^2 + \Theta(n^2)
+\end{align*}
+From the definition of big-$\Theta$, we have $\Theta(n^2) \leq \frac{3}{4}c_2n^2$ for all $n \geq 2n_0$ when $c_2$ and $n_0$ are large enough. Therefore, $T(n) \leq c_1n^{log7} - c_2n^2$ for all $n \geq 2n_0$.\\
+Now let's consider the base cases $n_0 \leq n < 2n_0$. For every n in this range, the execution time of the algorithm is limited, so as long as $c_1$ is sufficiently large, we have $T(n) \leq c_1n^{log7} - c_2n^2$ for all $n_0 \leq n < 2n_0$. So the base cases are established.\\
+By the principle of mathematical induction, we have $T(n) \leq c_1n^{log7} - c_2n^2 \leq c_1n^{log7}$ for all $n \geq n_0$. Therefore, the time complexity of the algorithm is $O(n^{log7})$.
 
-\textbf{Solution}:\\
-The recursion stops when the length of the array is less than $k$. If $h$ is the depth of the recursive tree, we have $\frac{n}{2^h} = k$, which gives $h = \log \frac{n}{k}$. 
-The running time of each level is $O(n)$, so the total merge time is $O(n \log \frac{n}{k})$. 
-Running insertion sort on the $\frac{n}{k}$ subarrays of length $k$ takes $O(k^2)$ time each on average. So the total running time is $O(nk + n \log \frac{n}{k})$, and $f(n,k) = nk + n \log \frac{n}{k}$.\\
-
-In theory, $k$ should be picked such that $f(n,k)$ is minimized. We have $\frac{\partial f(n,k)}{\partial k} = n - \frac{n}{k} = 0$, this gives $k = 1$, which is not a satisfactory value.
-We have to consider the constant factors, as big-$O$ notation ignores them but they actually affects the running time. If the running time is $c_1 n \log \frac{n}{k} + c_2 nk$, then $\frac{\partial f(n,k)}{\partial k} = - c_1 \frac{n}{k} + c_2 n = 0$, which gives $k = \frac{c_1}{c_2}$.
-Note that the constants are dependent of the machine, and some lower order terms are ignored, so theoretically we cannot find the optimal value of $k$ directly.\\
-
-In practice, we can pick $k$ by running experiments. We can run the algorithm with different values of $k$ and pick the one that gives the smallest running time. 
-The code below is used to find the best $k$ according to various size $n$. For every $n= 10000, 10500, \ldots, 20000$, we run the combine sort with $k$ ranging from $10$ to $50$ with step size $2$.
-To prevent the randomness of the input array from affecting the result, we run the algorithm $10$ times for each $k$ and take the average running time.\\
+\subsection{Experimental time overhead}
+We use the following code to test the time overhead of the two algorithms. See timecost.py.
 \begin{lstlisting}
+from matrix_mul_ord import matrix_multiply_ordinary
+# from matrix_mul_Strassen import matrix_multiply_strassen
+from matrix_mul_Strassen_re import matrix_multiply_strassen_t
 import time
 import matplotlib.pyplot as plt
-import random
-from collections import Counter
 
-def insertionSort(array):
-    n = len(array)
-    for j in range(1,n):
-        key = array[j]
-        i = j - 1
-        while i >= 0 and key < array[i]:
-            array[i+1] = array[i]
-            i = i - 1
-        array[i+1] = key
-    return array
-
-def merge(left, right):
-    i = j = 0
-    result = []
-    while i < len(left) and j < len(right):
-        if left[i] <= right[j]:
-            result.append(left[i]) 
-            i += 1
-        else:
-            result.append(right[j])
-            j += 1
-    result += left[i:]
-    result += right[j:]
-    return result
-
-def combineSort(array, k):
-    n = len(array)
-    if n <= k: # if array size is less than k, use insertion sort
-        return insertionSort(array)
-    else: # else, split array in half and recursively call combineSort
-        mid = n//2
-        left = array[:mid]
-        right = array[mid:]
-        left = combineSort(left, k)
-        right = combineSort(right, k)
-        return merge(left, right)
-
-def fine_best_k(arrsize, krange):
-    random.seed(203) # set seed to 203
-    array = [random.randint(0, 1000000) for _ in range(arrsize)] # generate random array
-    best_k = 0
-    best_time = 9999999999 # set best time to a rather large number
-
-    for k in krange: # max subarray size for insertion sort
-        total_time = 0
-        avg_time = 0
-        for i in range(1,10): # run 10 times and take average
-            start = time.time()
-            combineSort(array, k) # call combine sort
-            end = time.time()
-            total_time += end - start
-        avg_time = total_time/10
-        
-        if avg_time < best_time:
-            best_time = avg_time
-            best_k = k
-    return best_k
-
-
-sizerange = range(10000, 20000, 500) # array size range
-k_record = [] # record best k for each array size
-krange = range(10, 51, 2) # max subarray size for insertion sort. The best k mostly lies in 10~50
-for arraysize in sizerange:
-    k_record.append(fine_best_k(arraysize, krange))
+time_ord = []
+time_strassen = []
+time_strassen_16 = []
+time_strassen_32 = []
+time_strassen_64 = []
+nrange = []
+for k in range(2,11):
+    nrange.append(2**k)
+for n in nrange:
+    # construct matrix A and B
+    A = [[1 for _ in range(n)] for _ in range(n)]
+    B = [[1 for _ in range(n)] for _ in range(n)]
+    start = time.time()
+    result_ord = matrix_multiply_ordinary(A, B)
+    end = time.time()
+    time_ord.append(end - start)
     
-count = Counter(k_record)
-print(count.most_common(1)[0][0]) # print k with the most frequency
-plt.plot(sizerange, k_record, 'b--') # plot array size vs best k
-plt.show()
+    # start = time.time()
+    # result_strassen = matrix_multiply_strassen(A, B)
+    # end = time.time()
+    # time_strassen.append(end - start)
+    
+    start = time.time()
+    result_strassen_16 = matrix_multiply_strassen_t(A, B, 16)
+    end = time.time()
+    time_strassen_16.append(end - start)
+    
+    start = time.time()
+    result_strassen_32 = matrix_multiply_strassen_t(A, B, 32)
+    end = time.time()
+    time_strassen_32.append(end - start)
+    
+    start = time.time()
+    result_strassen_64 = matrix_multiply_strassen_t(A, B, 64)
+    end = time.time()
+    time_strassen_64.append(end - start)
+
+# print the time cost
+print('Ordinary Multiplication:',time_ord)
+print('Strassen16 Multiplication:',time_strassen_16)
+print('Strassen32 Multiplication:',time_strassen_32)
+print('Strassen64 Multiplication:',time_strassen_64)
+
+# plot the time cost
+plt.figure(figsize=(10, 6))
+plt.plot(nrange, time_ord, label='Ordinary Multiplication')
+# plt.plot(nrange, time_strassen, label='Strassen Multiplication')
+plt.plot(nrange, time_strassen_16, label='Strassen16 Multiplication')
+plt.plot(nrange, time_strassen_32, label='Strassen32 Multiplication')
+plt.plot(nrange, time_strassen_64, label='Strassen64 Multiplication')
+plt.xlabel('Matrix Size (N)')
+plt.ylabel('Time (seconds)')
+plt.title('Matrix Multiplication Algorithms Comparison')
+plt.legend()
+plt.grid(True)
+plt.show()   
 \end{lstlisting}
-The plot of array size vs best $k$ is shown in Figure 3. From the figure, we notice that $k$ is not a constant, but 
-in this experiment $k = 20$ is the best value for most array sizes, for it has the highest frequency.\\
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{best k.png}
-    \caption{array size vs best k}
-\end{figure}
-There are many reasons why the best $k$ is not a constant. For example, the constants in the running time of insertion sort and merge sort are dependent of the machine, so they can vary a little.
-Additionally, the cache of the computer can affect the running time of insertion sort, which is not considered in the theoretical analysis. But we can still conclude that $k$ can be taken as a constant in practice, for the best $k$ is not changing dramatically with the array size.\\
-    
-\section{}
-Write code for improved version of sorting algorithm which combines merge sort with insertion sort.\\
-
-\textbf{Solution}: See combine\_insert\_merge.py.
+\textbf{Code interpretation and result analysis:} \\
+The code is used to test the respective time cost of the two algorithms. We generate all-one matrices whose sizes range from $2^2$ to $2^{8}$, 
+and record each running time. We plot the time cost of the two algorithms in Figure 1.\\
+From the figure, we can see that the time cost of Strassen's algorithm increases rapidly with the increase of the matrix size, far exceeding the ordinary algorithm.
+This is beyond my expectation. I tried the following methods to tackle this situation.\\
+First, I thought that the matrix size is not large enough, and Strassen's algorithm is slower than the ordinary because of the recursions with more additions and subtractions, and larger constant factor.
+Then I tried to increase the matrix size to $2^{10}$, but it takes too much time to run, and I also recalled that the slides said that Strassen's algorithm beats the ordinary algorithm on
+today's machines for $n \geq 32$ or so. So it may not be a good idea to increase the matrix size.\\
+After finding some information on the Internet, I found that my result is consistent with the actual situation. The reason is that using Strassen's algorithm for recursive operations requires creating 
+a large number of dynamic two-dimensional arrays, and allocating heap memory space will consume a lot of computation time, thereby masking the advantages of the Strassen algorithm. 
+Therefore, I tried to improve the algorithm by setting a threshold $t$. When $n$ is less than $t$, the matrix is calculated using the ordinary method instead of continuing with divide and conquer recursion.
+I set the threshold to $16, 32, 64$ respectively in the revised code matrix\_mul\_Strassen\_re.py, and the new running results are shown in Table 1 and Figure 2.\\
 \begin{lstlisting}
-k = 20
-
-def insertionSort(array):
-    n = len(array)
-    for j in range(1,n):
-        key = array[j]
-        i = j - 1
-        while i >= 0 and key < array[i]:
-            array[i+1] = array[i]
-            i = i - 1
-        array[i+1] = key
-    return array
-
-def merge(left, right):
-    i = j = 0
-    result = []
-    while i < len(left) and j < len(right):
-        if left[i] <= right[j]:
-            result.append(left[i]) 
-            i += 1
-        else:
-            result.append(right[j])
-            j += 1
-    result += left[i:]
-    result += right[j:]
-    return result
+# squre matrix multiplication using revised Strassen algorithm, 2^k * 2^k
+def matrix_multiply_strassen_t(A, B, t):
+    n = len(A)  
+    if n <= t: # set the threshold
+        C = [[0 for _ in range(n)] for _ in range(n)]
+        for i in range(n):
+            for j in range(n):
+                for k in range(n):
+                    C[i][j] += A[i][k] * B[k][j]
+        return C
     
-def combineSort(array, k):
-    n = len(array)
-    if n <= k: # if array size is less than k, use insertion sort
-        return insertionSort(array)
-    else: # else, split array in half and recursively call combineSort
-        mid = n//2
-        left = array[:mid]
-        right = array[mid:]
-        left = combineSort(left, k)
-        right = combineSort(right, k)
-        return merge(left, right)
+    # divide matrix A and B into four sub-matrices
+    mid = n // 2
+    ...
+    # the rest is the same as the original Strassen's algorithm
 \end{lstlisting}
-\textbf{Code interpretation:} \\
-The code defines a function $\it{combineSort}$ which takes an array as input and returns the sorted array. It combines insertion sort and merge sort with a threshold $k = 20$ for calling $\it{insertionSort}$, according to
-the experiment result above.\\
-\textbf{Result analysis:} \\
-The code is tested with a randomly generated array with size $50$. As shown in Figure 4, the code returns the sorted array successfully.
+\medskip
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+    \hline
+    Matrix Dimension & $2^2$ & $2^3$ & $2^4$ & $2^5$ & $2^6$ & $2^7$ & $2^8$ & $2^9$ & $2^{10}$ \\
+    \hline
+    Ordinary Multiplication (ms) & 0.0 & 0.0 & 1.0 & 3.0 & 21.9 & 186.5 & 1593.8 & 14359.1 & 135279.0 \\
+    \hline
+    Strassen16 Multiplication (ms) & 0.0 & 0.0 & 1.0 & 2.0 & 24.9 & 165.8 & 1229.5 & 8931.1 & 80677.6 \\
+    \hline
+    Strassen32 Multiplication (ms) & 0.0 & 0.0 & 1.0 & 3.0 & 24.0 & 161.6 & 1165.1 & 8708.5 & 74905.4 \\
+    \hline
+    Strassen64 Multiplication (ms) & 0.0 & 0.0 & 1.0 & 3.0 & 23.9 & 163.6 & 1247.9 & 9895.1 & 123558.6 \\
+    \hline
+    \end{tabular}
+    \caption{Running time of different matrix multiplication algorithms.}
+\end{table}  
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{combineSort.png}
-    \caption{Output of combineSort}
+    \includegraphics[width=0.8\textwidth]{Strassen_raw.png}
+    \caption{Time cost of the ordinary algorithm and Strassen's algorithm}
 \end{figure}
-
+\medskip
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Strassen_revised.png}
+    \caption{Time cost of the ordinary algorithm and Strassen's algorithm with threshold}
+\end{figure}
+After improvement, the advantage of Strassen's algorithm is obvious when the matrix size is large, and the computation time is greatly reduced than the ordinary algorithm. This is consistent with the theoretical time complexity analysis.\\
+Apart from that, we can see that $t = 32$ is good with the lowest cost among three thresholds. To further verify that the orders of magnitude of the two algorithms are correct, we take the cube root of the running time of the ordinary algorithm,
+take $log7$ root of the running time of Strassen's algorithm, and plot the rooted time vs matrix size in Figure 3.\\
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{complexity_analysis.png}
+    \caption{Rooted time cost of the ordinary algorithm and Strassen's algorithm with threshold}
+\end{figure}
+From the figure, we can see that the rooted time cost of the algorithm is approximately a linear function of the matrix size, which is consistent with the theoretical time complexity analysis.\\
+\textbf{Conclusion}:\\
+The theoretical time complexity of the ordinary algorithm is $O(n^3)$, and the theoretical time complexity of Strassen's algorithm is $O(n^{log7})$. When the matrix size is large enough, Strassen's algorithm with thresholds is much faster than the ordinary algorithm.
+However, when the matrix size is small, the ordinary algorithm is still useful.\\
 \end{document}
